@@ -36,7 +36,7 @@ class GazeAOI():
             gazeLoc = self.gazeLoc
   
             data.append(self.df)
-            print(self.df.head())
+            #print(self.df.head())
             
         with open(outPath, "w") as outfile:
             json.dump(self.outDict, outfile, indent = 4)
@@ -116,7 +116,7 @@ class GazeAOI():
                             time = self.timeStamp[k] - begTime
                             begTime = self.timeStamp[k]
                             valType = self.NumtoStr(self.gazeLoc[k])
-                            print(f"{valType} - {self.gazeLoc[k]}")
+                            #print(f"{valType} - {self.gazeLoc[k]}")
                             pTime = round(float(time),4)
                             
                             outStr = f"{valType}: {pTime}ms"
@@ -133,18 +133,36 @@ class GazeAOI():
                             
                             outStr = f"{valType}: {pTime}ms"
                             fullStr.append(outStr)
+                            
             for k in range(len(fullStr)-3,0,-1):
                 lastStr = fullStr[-1]
-                        
-            self.outDict[self.sheet]["Timeline"][numName] = fullStr
-            self.outDict[self.sheet]["LastLook"][numName] = lastStr
-            for k in range(-1,-1*len(fullStr),-1):
-                if "NaN" not in fullStr[k] and "Neither" not in fullStr[k]:
-                    self.outDict[self.sheet]["LastValid"][numName] = fullStr[k]
+            
+            outStr = []
+            inc = 0
+            for k,item in enumerate(fullStr):
+                try:
+                    if item[:2] == fullStr[k+1][:2]:
+                        inc += float(item.split(": ")[1][:-2])
+                    else:
+                        inc += float(item.split(": ")[1][:-2])
+                        ref = item.split(": ")[0]
+                        outStr.append(f"{ref}: {inc}ms")
+                        inc = 0
+                except:
+                    inc += float(item.split(": ")[1][:-2])
+                    ref = item.split(": ")[0]
+                    outStr.append(f"{ref}: {inc}ms")
+                    inc = 0
+                
+            self.outDict[self.sheet]["Timeline"][numName] = outStr
+            self.outDict[self.sheet]["LastLook"][numName] = outStr[-1]
+            for k in range(-1,-1*len(outStr),-1):
+                if "NaN" not in outStr[k] and "Neither" not in outStr[k]:
+                    self.outDict[self.sheet]["LastValid"][numName] = outStr[k]
                     break
                     
             
 
 fPath = "D:/Research/Kaiyo/PupilProcess2/GazeTrial.xlsx"
-outPath = "D:/Research/Kaiyo/PupilProcess2/JsonTest3.json"
+outPath = "D:/Research/Kaiyo/PupilProcess2/JsonTest4.json"
 GazeAOI(fPath, outPath)
