@@ -19,7 +19,7 @@ def filter(fName):
     df2 = pd.DataFrame(data2, columns = ["Timestamp","ET_PupilLeft","ET_PupilRight"])
     df2.to_csv(expName,index=False)
     
-path = "M:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\"    
+path = "M:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\2-8Update\\"    
 csvList = os.listdir(path)
 for word in csvList:
     if ".csv" in word:

@@ -11,7 +11,9 @@ class VariantProcess():
             self.refdf = pd.read_csv(referencePath, usecols=["TrialISI","StimDur","arrow_disp.started"])
         self.refdf = self.refdf.to_numpy()
         self.data = pd.read_csv(dataPath, usecols = ["Timestamp","ET_PupilLeft","ET_PupilRight"]).to_numpy()
-        fileID = dataPath.split("\\")[-1][4:7]
+        #print(dataPath)
+        fileID = dataPath.split("\\")[-1].split("_")[1].split("CE")[0]
+        print(fileID)
         if "Letter" in referencePath:
             fileID = fileID + "L"
         elif "Arrow" in referencePath:
@@ -24,7 +26,8 @@ class VariantProcess():
         self.output[fileID] = {"Dilated":{"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]},
                                "BaselineAve":{"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]},
                                "Total":{"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]},
-                               "Truncated":{"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]}}   
+                               "Truncated":{"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]},
+                               "Order":[]}   
         
         self.startTrial = [0]
         self.endTrial = []
@@ -37,7 +40,7 @@ class VariantProcess():
         
         self.newTrial = self.startTrial[:-1]
         
-        print(f"AAA {self.newTrial}")
+        #print(f"AAA {self.newTrial}")
         
         self.baseline()
         
@@ -72,10 +75,10 @@ class VariantProcess():
         
         #print(self.startTimes)
         #print(self.endTimes)
-        print(f"BBB {self.startTrial}")
+        #print(f"BBB {self.startTrial}")
         
         self.indeces = self.convertRef([self.startTimes,self.endTimes])
-        print(self.indeces)
+        #print(self.indeces)
         for i,j in enumerate(self.indeces):
             subsect = self.data[int(j[0]):int(j[1]),1:2]
             #subsectFull = self.data[int()]
@@ -88,7 +91,20 @@ class VariantProcess():
             for i,j in enumerate(self.indecesFull):
                 subsect = self.data[int(j[0]):int(j[1]),1:2]
                 self.output[fileID]["Total"][self.numNames[i]].append(np.nanmean(subsect))    
-                
+        
+        #ORDER
+        global refdf
+        refdf = self.refdf
+        comp1,comp2 = 0,0
+        for val in self.refdf:
+            #print(val)
+            if val[0] != comp1 or val[1] != comp2:
+                if val[0]*0 == 0 and val[1]*0 == 0:
+                    #print(val[:2])
+                    self.output[fileID]["Order"].append(f"{int(val[0])} - {int(val[1])}")
+                    comp1 = val[0]
+                    comp2 = val[1]
+        #print(self.output[fileID]["Order"])
     def baseline(self):
         self.baseline = []
         for i in self.newTrial:
@@ -104,7 +120,7 @@ class VariantProcess():
                 j+=1
             endIndex = j
             self.baseline.append(np.nanmean(self.data[startIndex:endIndex,1:3]))
-        print(self.baseline)
+        #print(self.baseline)
         
     def convertRef(self, refIndeces):
         tempInd = np.zeros((len(refIndeces[0]),2))
@@ -126,11 +142,12 @@ class VariantProcess():
         return(self.output)
         
     
-        
+'''        
 dataPath = ["D:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\001_109CE Letter 03-08-22 14h22mfiltered.csv",
             "D:\\Research/Kaiyo\\Variants\\Variant Raw Sensor Data\\002_109CE Arrow 03-08-22 13h41mfiltered.csv"]
 referencePath = ["D:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\Timestamps\\LetterTask_109CE_3_1_2022_Aug_03_1425.csv",
                  "D:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\Timestamps\\Arrow_ArrowRV_109CE_4_1_2022_Aug_03_1345.csv"]
+'''
 time = 25
 #Use if new
 #f = open("D:\\Research\\Kaiyo\\Variants\\25Seconds.json")
@@ -139,6 +156,23 @@ time = 25
 
 #dictionary = {"Participant":[],"750 - 800":[],"750 - 400":[],"750 - 200":[],"1000 - 800":[],"1000 - 400":[],"1000 - 200":[]}
 
+path = "M:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\2-8Update\\"
+
+dataPath = []
+referencePath = []
+
+csvList = os.listdir(path)
+for word in csvList:
+    if "filtered" in word:
+        dataPath.append(path+word)
+for paths in dataPath:
+    for ts in os.listdir(path+"Timestamps\\"):
+        #print(ts)
+        num = paths.split("_")[1].split("CE")[0]+"CE"
+        types =paths.split("_")[1].split("CE")[1].split(" ")[1]
+        if num in ts and types in ts:
+            #print(f"{num} and {types} in {ts}")
+            referencePath.append(path+"Timestamps\\"+ts)
 dictionary = {}
 
 
@@ -147,5 +181,5 @@ for i in range(len(dataPath)):
     dictionary = A.returner()
 
 
-with open("D:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\23Seconds2.json", "w") as outfile:
+with open("M:\\Research\\Kaiyo\\Variants\\Variant Raw Sensor Data\\2-8Update\\23SecondOutput.json", "w") as outfile:
     json.dump(dictionary, outfile, indent = 4)
